@@ -11,6 +11,10 @@ const {
   GOOGLE_SPREADSHEET_ID,
 } = process.env
 
+const timeout = (timeMs: number) => new Promise(resolve => {
+  setTimeout(resolve, timeMs)
+})
+
 export default class Crypto extends Command {
   static description = 'describe the command here'
 
@@ -24,6 +28,9 @@ export default class Crypto extends Command {
 
   static args = [{name: 'file'}]
 
+  // Sometimes the google sheets value isn't loaded yet
+  sheetTries = 0
+
   async run() {
     const {args, flags} = this.parse(Crypto)
 
@@ -31,11 +38,11 @@ export default class Crypto extends Command {
     const ynabBalance = await this.getYNABCryptoBalance()
     const diff = cryptoValue - ynabBalance
 
-    if (diff === 0) {
-      return this.log('Balance is already up to date.')
+    if (diff === 0 || Math.abs(diff) < 1000) {
+      return this.log('√ Balance is already up to date')
     }
 
-    cli.action.start(`Creating reconciliation for ${diff / 1000}kr`)
+    cli.action.start(`Creating reconciliation for ${diff / 1000} kr`)
     await ynabAPI.transactions.createTransaction(YNAB_BUDGET_ID!, {
       transaction: {
         account_id: YNAB_CRYPTO_ACCOUNT_ID!,
@@ -44,12 +51,14 @@ export default class Crypto extends Command {
         cleared: SaveTransaction.ClearedEnum.Reconciled,
         payee_name: 'BudgetSync',
         memo: 'Entered automatically by BudgetSync',
+        approved: true,
       },
     })
     cli.action.stop()
   }
 
-  getCryptoValue = async () => {
+  getCryptoValue = async (): Promise<number> => {
+    this.sheetTries++
     const sheets = google.sheets({version: 'v4', auth: await googleAuth.getClient()})
     try {
       cli.action.start('Reading crypto holding value from Google Sheet')
@@ -62,7 +71,18 @@ export default class Crypto extends Command {
       if (!values) {
         return this.error('No values found for spreadsheet')
       }
-      return values[0][0]
+
+      const v = values[0][0]
+      if (isNaN(v)) {
+        if (this.sheetTries < 5) {
+          this.log('Failed to load value, trying again..')
+          await timeout(1000 + (this.sheetTries * 500))
+          return this.getCryptoValue()
+        }
+        throw new Error('Could not load current holding value from Google Sheet')
+      }
+
+      return v
     } catch (error) {
       cli.action.stop()
       this.error(error)
