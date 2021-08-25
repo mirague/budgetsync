@@ -23,9 +23,9 @@ function txFilter(tx: Transaction): boolean {
   return daysSinceDate(new Date(tx.bookingDate)) <= 7
 }
 
-function toYNABTransaction(tx: Transaction, fillImportId = true): SaveTransaction {
+function toYNABTransaction(tx: Transaction, isPending = false): SaveTransaction {
   return {
-    import_id: fillImportId ? tx.transactionId : null,
+    import_id: isPending ? null : tx.transactionId,
     cleared: SaveTransaction.ClearedEnum.Cleared,
     account_id: YNAB_CHECKING_ACCOUNT_ID!,
     amount: parseInt(tx.transactionAmount.amount, 10) * 1000,
@@ -57,7 +57,7 @@ export default class Bank extends Command {
         task: async (ctx: Context) => {
           const transactions = [
             ...ctx.transactions.booked.filter(txFilter).map(tx => toYNABTransaction(tx)),
-            ...ctx.transactions.pending.filter(txFilter).map(tx => toYNABTransaction(tx, false)),
+            ...ctx.transactions.pending.filter(txFilter).map(tx => toYNABTransaction(tx, true)),
           ]
 
           return ynabAPI.transactions.bulkCreateTransactions(YNAB_BUDGET_ID!, {
