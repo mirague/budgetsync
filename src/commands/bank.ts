@@ -23,9 +23,9 @@ function txFilter(tx: Transaction): boolean {
   return daysSinceDate(new Date(tx.bookingDate)) <= 7
 }
 
-function toYNABTransaction(tx: Transaction): SaveTransaction {
+function toYNABTransaction(tx: Transaction, fillImportId = true): SaveTransaction {
   return {
-    import_id: tx.transactionId,
+    import_id: fillImportId ? tx.transactionId : null,
     cleared: SaveTransaction.ClearedEnum.Cleared,
     account_id: YNAB_CHECKING_ACCOUNT_ID!,
     amount: parseInt(tx.transactionAmount.amount, 10) * 1000,
@@ -36,25 +36,13 @@ function toYNABTransaction(tx: Transaction): SaveTransaction {
 }
 
 export default class Bank extends Command {
-  static description = 'describe the command here'
-
-  static flags = {
-    help: flags.help({char: 'h'}),
-    // flag with a value (-n, --name=VALUE)
-    name: flags.string({char: 'n', description: 'name to print'}),
-    // flag with no value (-f, --force)
-    force: flags.boolean({char: 'f'}),
-  }
-
-  static args = [{name: 'file'}]
+  static description = 'import transactions to YNAB from Nordigen'
 
   async run() {
-    const {args, flags} = this.parse(Bank)
-
     const tasks = new Listr([
       {
         title: 'Load bank transactions',
-        task: async (ctx: Context, task) => {
+        task: async (ctx: Context) => {
           const data = await nordigen.getAccountTransactions(NORDIGEN_REQUISITION_ID!)
           const {transactions} = data
           if (!transactions) {
@@ -66,11 +54,11 @@ export default class Bank extends Command {
       },
       {
         title: 'Import to YNAB',
-        task: async (ctx: Context, task) => {
+        task: async (ctx: Context) => {
           const transactions = [
-            ...ctx.transactions.booked.filter(txFilter),
-            ...ctx.transactions.pending.filter(txFilter),
-          ].map(toYNABTransaction)
+            ...ctx.transactions.booked.filter(txFilter).map(tx => toYNABTransaction(tx)),
+            ...ctx.transactions.pending.filter(txFilter).map(tx => toYNABTransaction(tx, false)),
+          ]
 
           return ynabAPI.transactions.bulkCreateTransactions(YNAB_BUDGET_ID!, {
             transactions,
