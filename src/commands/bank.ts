@@ -1,4 +1,4 @@
-import {Command, flags} from '@oclif/command'
+import {Command} from '@oclif/command'
 import * as Listr from 'listr'
 import Nordigen from 'nordigen-api'
 import {Transaction, TransactionData} from 'nordigen-api/build/main/lib/types'
@@ -57,7 +57,7 @@ export default class Bank extends Command {
         task: async (ctx: Context) => {
           const transactions = [
             ...ctx.transactions.booked.filter(txFilter).map(tx => toYNABTransaction(tx)),
-            ...ctx.transactions.pending.filter(txFilter).map(tx => toYNABTransaction(tx, true)),
+            // ...ctx.transactions.pending.filter(txFilter).map(tx => toYNABTransaction(tx, true)),
           ]
 
           return ynabAPI.transactions.bulkCreateTransactions(YNAB_BUDGET_ID!, {
