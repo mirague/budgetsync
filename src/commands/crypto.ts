@@ -1,81 +1,89 @@
-import {Command, flags} from '@oclif/command'
+import {Command} from '@oclif/command'
 import {google} from 'googleapis'
 import {SaveTransaction} from 'ynab'
+import * as Listr from 'listr'
 import {googleAuth} from '../lib/google'
 import {ynabAPI} from '../lib/ynab'
+import {timeout} from '../lib/timeout'
 import cli from 'cli-ux'
 
-const {
-  YNAB_CRYPTO_ACCOUNT_ID,
-  YNAB_BUDGET_ID,
-  GOOGLE_SPREADSHEET_ID,
-} = process.env
-
-const timeout = (timeMs: number) => new Promise(resolve => {
-  setTimeout(resolve, timeMs)
-})
+type Context = {
+  cryptoHoldingAmount: number;
+  ynabAccountBalance: number;
+  diff: number;
+}
 
 export default class Crypto extends Command {
-  static description = 'describe the command here'
-
-  static flags = {
-    help: flags.help({char: 'h'}),
-    // flag with a value (-n, --name=VALUE)
-    name: flags.string({char: 'n', description: 'name to print'}),
-    // flag with no value (-f, --force)
-    force: flags.boolean({char: 'f'}),
-  }
-
-  static args = [{name: 'file'}]
+  static description = 'sync Crypto holdings to YNAB tracking account'
 
   // Sometimes the google sheets value isn't loaded yet
   sheetTries = 0
 
   async run() {
-    const {args, flags} = this.parse(Crypto)
-
-    const cryptoValue = Math.round(await this.getCryptoValue() * 1000)
-    const ynabBalance = await this.getYNABCryptoBalance()
-    const diff = cryptoValue - ynabBalance
-
-    if (diff === 0 || Math.abs(diff) < 1000) {
-      return this.log('√ Balance is already up to date')
-    }
-
-    cli.action.start(`Creating reconciliation for ${diff / 1000} kr`)
-    await ynabAPI.transactions.createTransaction(YNAB_BUDGET_ID!, {
-      transaction: {
-        account_id: YNAB_CRYPTO_ACCOUNT_ID!,
-        amount: diff,
-        date: (new Date()).toISOString(),
-        cleared: SaveTransaction.ClearedEnum.Reconciled,
-        payee_name: 'BudgetSync',
-        memo: 'Entered automatically by BudgetSync',
-        approved: true,
+    const tasks = new Listr([
+      {
+        title: 'Load Crypto account balances',
+        task: async (ctx: Context) => {
+          ctx.cryptoHoldingAmount = Math.round(await this.getCryptoValue() * 1000)
+          return true
+        },
       },
+      {
+        title: 'Load YNAB account balance',
+        task: async (ctx: Context) => {
+          const {data: {account}} = await ynabAPI.accounts.getAccountById(
+            process.env.YNAB_BUDGET_ID!,
+            process.env.YNAB_CRYPTO_ACCOUNT_ID!
+          )
+          ctx.ynabAccountBalance = account.cleared_balance + account.uncleared_balance
+          return true
+        },
+      },
+      {
+        title: 'Reconcile tracking account in YNAB',
+        skip: (ctx: Context) => {
+          ctx.diff = Math.round(ctx.cryptoHoldingAmount - ctx.ynabAccountBalance)
+          return (Math.abs(ctx.diff) < 1000) ? 'Nothing to reconcile' : false
+        },
+        task: async (ctx: Context) => ynabAPI.transactions.createTransaction(process.env.YNAB_BUDGET_ID!, {
+          transaction: {
+            account_id: process.env.YNAB_CRYPTO_ACCOUNT_ID!,
+            amount: ctx.diff,
+            date: (new Date()).toISOString(),
+            cleared: SaveTransaction.ClearedEnum.Reconciled,
+            payee_name: 'BudgetSync',
+            memo: 'Entered automatically by BudgetSync',
+            approved: true,
+          },
+        }),
+      },
+    ])
+
+    tasks.run().catch(error => {
+      if (error instanceof Error) {
+        this.error(error)
+      }
+      console.error('Error:', {...error}) // eslint-disable-line
     })
-    cli.action.stop()
   }
 
   getCryptoValue = async (): Promise<number> => {
     this.sheetTries++
     const sheets = google.sheets({version: 'v4', auth: await googleAuth.getClient()})
     try {
-      cli.action.start('Reading crypto holding value from Google Sheet')
       const {data: {values}} = await sheets.spreadsheets.values.get({
-        spreadsheetId: GOOGLE_SPREADSHEET_ID!,
+        spreadsheetId: process.env.GOOGLE_SPREADSHEET_ID!,
         range: 'Holdings!E2',
         valueRenderOption: 'UNFORMATTED_VALUE',
       })
       cli.action.stop()
       if (!values) {
-        return this.error('No values found for spreadsheet')
+        return this.error(new Error('No values found for spreadsheet'))
       }
 
       const v = values[0][0]
       if (isNaN(v)) {
         if (this.sheetTries < 5) {
-          this.log('Failed to load value, trying again..')
           await timeout(1000 + (this.sheetTries * 500))
           return this.getCryptoValue()
         }
@@ -87,13 +95,5 @@ export default class Crypto extends Command {
       cli.action.stop()
       this.error(error)
     }
-  }
-
-  getYNABCryptoBalance = async () => {
-    const {data: {account}} = await ynabAPI.accounts.getAccountById(
-      YNAB_BUDGET_ID!,
-      YNAB_CRYPTO_ACCOUNT_ID!
-    )
-    return account.cleared_balance + account.uncleared_balance
   }
 }

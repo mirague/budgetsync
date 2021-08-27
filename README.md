@@ -28,79 +28,43 @@ USAGE
 <!-- usagestop -->
 # Commands
 <!-- commands -->
-* [`budgetsync bank [FILE]`](#budgetsync-bank-file)
-* [`budgetsync crypto [FILE]`](#budgetsync-crypto-file)
-* [`budgetsync google [FILE]`](#budgetsync-google-file)
-* [`budgetsync hello [FILE]`](#budgetsync-hello-file)
+* [`budgetsync avanza`](#budgetsync-avanza)
+* [`budgetsync bank`](#budgetsync-bank)
+* [`budgetsync crypto`](#budgetsync-crypto)
 * [`budgetsync help [COMMAND]`](#budgetsync-help-command)
 
-## `budgetsync bank [FILE]`
+## `budgetsync avanza`
 
-describe the command here
+sync Avanza holdings to YNAB tracking account
 
 ```
 USAGE
-  $ budgetsync bank [FILE]
+  $ budgetsync avanza
+```
 
-OPTIONS
-  -f, --force
-  -h, --help       show CLI help
-  -n, --name=name  name to print
+_See code: [src/commands/avanza.ts](https://github.com/mirague/budgetsync/blob/v0.0.0/src/commands/avanza.ts)_
+
+## `budgetsync bank`
+
+import transactions from Nordigen to YNAB
+
+```
+USAGE
+  $ budgetsync bank
 ```
 
 _See code: [src/commands/bank.ts](https://github.com/mirague/budgetsync/blob/v0.0.0/src/commands/bank.ts)_
 
-## `budgetsync crypto [FILE]`
+## `budgetsync crypto`
 
-describe the command here
+sync Crypto holdings to YNAB tracking account
 
 ```
 USAGE
-  $ budgetsync crypto [FILE]
-
-OPTIONS
-  -f, --force
-  -h, --help       show CLI help
-  -n, --name=name  name to print
+  $ budgetsync crypto
 ```
 
 _See code: [src/commands/crypto.ts](https://github.com/mirague/budgetsync/blob/v0.0.0/src/commands/crypto.ts)_
-
-## `budgetsync google [FILE]`
-
-describe the command here
-
-```
-USAGE
-  $ budgetsync google [FILE]
-
-OPTIONS
-  -f, --force
-  -h, --help       show CLI help
-  -n, --name=name  name to print
-```
-
-_See code: [src/commands/google.ts](https://github.com/mirague/budgetsync/blob/v0.0.0/src/commands/google.ts)_
-
-## `budgetsync hello [FILE]`
-
-describe the command here
-
-```
-USAGE
-  $ budgetsync hello [FILE]
-
-OPTIONS
-  -f, --force
-  -h, --help       show CLI help
-  -n, --name=name  name to print
-
-EXAMPLE
-  $ budgetsync hello
-  hello world from ./src/hello.ts!
-```
-
-_See code: [src/commands/hello.ts](https://github.com/mirague/budgetsync/blob/v0.0.0/src/commands/hello.ts)_
 
 ## `budgetsync help [COMMAND]`
 

@@ -36,7 +36,7 @@ function toYNABTransaction(tx: Transaction, isPending = false): SaveTransaction 
 }
 
 export default class Bank extends Command {
-  static description = 'import transactions to YNAB from Nordigen'
+  static description = 'import transactions from Nordigen to YNAB'
 
   async run() {
     const tasks = new Listr([
@@ -67,6 +67,6 @@ export default class Bank extends Command {
       },
     ])
 
-    tasks.run()
+    tasks.run().catch(this.error)
   }
 }
