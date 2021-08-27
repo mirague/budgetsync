@@ -10,7 +10,6 @@ Sync budget info.
 
 <!-- toc -->
 * [Installation](#installation)
-* [Sample CRONTAB](#sample-crontab)
 * [Usage](#usage)
 * [Commands](#commands)
 <!-- tocstop -->
@@ -24,9 +23,11 @@ Sync budget info.
 6. Read how to [Setup Google Spreadsheet credentials](https://www.section.io/engineering-education/google-sheets-api-in-nodejs/)
 7. Done! See usage down below
 
-# Sample CRONTAB
+## Sample CRONTAB
 Example for running all commands every hour
 ```sh-session
+crontab -e
+
 0 */1 * * * cd ~/budgetsync && ./bin/run bank
 0 */1 * * * cd ~/budgetsync && ./bin/run crypto
 0 */1 * * * cd ~/budgetsync && ./bin/run avanza
@@ -55,7 +56,7 @@ USAGE
 
 ## `budgetsync avanza`
 
-sync Avanza holdings to YNAB tracking account
+Sync investments holding value from Avanza to YNAB tracking account
 
 ```
 USAGE
@@ -77,7 +78,7 @@ _See code: [src/commands/bank.ts](https://github.com/mirague/budgetsync/blob/v0.
 
 ## `budgetsync crypto`
 
-Sync Crypto holdings to YNAB tracking account through a Google Sheet
+Sync Crypto holdings from a Google Sheet to YNAB tracking account
 
 ```
 USAGE

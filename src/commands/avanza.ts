@@ -16,7 +16,7 @@ type Context = {
 // Read how to setup Avanza credentials at https://github.com/fhqvst/avanza
 
 export default class Avanza extends Command {
-  static description = 'sync Avanza holdings to YNAB tracking account'
+  static description = 'Sync investments holding value from Avanza to YNAB tracking account'
 
   async run() {
     const tasks = new Listr([

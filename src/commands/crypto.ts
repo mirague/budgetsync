@@ -14,7 +14,7 @@ type Context = {
 }
 
 export default class Crypto extends Command {
-  static description = 'Sync Crypto holdings to YNAB tracking account through a Google Sheet'
+  static description = 'Sync Crypto holdings from a Google Sheet to YNAB tracking account'
 
   // Sometimes the google sheets value isn't loaded yet
   sheetTries = 0
