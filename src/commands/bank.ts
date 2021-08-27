@@ -36,12 +36,12 @@ function toYNABTransaction(tx: Transaction, isPending = false): SaveTransaction 
 }
 
 export default class Bank extends Command {
-  static description = 'import transactions from Nordigen to YNAB'
+  static description = 'Import transactions from Nordigen to YNAB'
 
   async run() {
     const tasks = new Listr([
       {
-        title: 'Load bank transactions',
+        title: 'Load bank transactions from Nordigen',
         task: async (ctx: Context) => {
           const data = await nordigen.getAccountTransactions(NORDIGEN_REQUISITION_ID!)
           const {transactions} = data
@@ -53,7 +53,7 @@ export default class Bank extends Command {
         },
       },
       {
-        title: 'Import to YNAB',
+        title: 'Import transactions to YNAB',
         task: async (ctx: Context) => {
           const transactions = [
             ...ctx.transactions.booked.filter(txFilter).map(tx => toYNABTransaction(tx)),
@@ -67,6 +67,11 @@ export default class Bank extends Command {
       },
     ])
 
-    tasks.run().catch(this.error)
+    tasks.run().catch(error => {
+      if (error instanceof Error) {
+        this.error(error)
+      }
+      console.error('Error:', {...error}) // eslint-disable-line
+    })
   }
 }

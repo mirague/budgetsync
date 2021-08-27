@@ -14,7 +14,7 @@ type Context = {
 }
 
 export default class Crypto extends Command {
-  static description = 'sync Crypto holdings to YNAB tracking account'
+  static description = 'Sync Crypto holdings to YNAB tracking account through a Google Sheet'
 
   // Sometimes the google sheets value isn't loaded yet
   sheetTries = 0
@@ -22,7 +22,7 @@ export default class Crypto extends Command {
   async run() {
     const tasks = new Listr([
       {
-        title: 'Load Crypto account balances',
+        title: 'Load Crypto account balance from Google Sheet',
         task: async (ctx: Context) => {
           ctx.cryptoHoldingAmount = Math.round(await this.getCryptoValue() * 1000)
           return true
