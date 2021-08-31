@@ -33,11 +33,12 @@ export default class Avanza extends Command {
             const accounts = await Promise.all(
               accountIds?.map(id => avanza.getAccountOverview(id))
             )
+
             await timeout(1000)
             avanza.disconnect()
 
             const amount = accounts.reduce((total: number, account) => {
-              const accValue = account.totalCollateralValue || account.totalPositionsValue
+              const accValue = account.totalPositionsValue + (account.creditAccountBalance || 0)
               return total + accValue
             }, 0)
 
