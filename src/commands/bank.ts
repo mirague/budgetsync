@@ -43,7 +43,8 @@ export default class Bank extends Command {
       {
         title: 'Load bank transactions from Nordigen',
         task: async (ctx: Context) => {
-          const data = await nordigen.getAccountTransactions(NORDIGEN_REQUISITION_ID!)
+          const requisitionInfo = await nordigen.getRequisitionInfo(NORDIGEN_REQUISITION_ID!)
+          const data = await nordigen.getAccountTransactions(requisitionInfo.accounts[0])
           const {transactions} = data
           if (!transactions) {
             throw new Error('Could not load account transactions')
