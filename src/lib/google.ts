@@ -1,4 +1,4 @@
-import {google} from 'googleapis'
+import { google } from 'googleapis'
 
 const SCOPES = ['https://www.googleapis.com/auth/spreadsheets.readonly']
 

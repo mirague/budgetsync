@@ -988,6 +988,11 @@ eslint-config-oclif@^3.1, eslint-config-oclif@^3.1.0:
     eslint-plugin-node "^7.0.1"
     eslint-plugin-unicorn "^6.0.1"
 
+eslint-config-prettier@^8.5.0:
+  version "8.5.0"
+  resolved "https://registry.npmjs.org/eslint-config-prettier/-/eslint-config-prettier-8.5.0.tgz#5a81680ec934beca02c7b1a61cf8ca34b66feab1"
+  integrity sha512-obmWKLUNCnhtQRKc+tmnYuQl0pFU1ibYJQ5BGhTVB08bHe9wC8qUeG7c08dj9XX+AuPj1YSGSQIHl1pnDHZR0Q==
+
 eslint-config-xo-space@^0.20.0:
   version "0.20.0"
   resolved "https://registry.npmjs.org/eslint-config-xo-space/-/eslint-config-xo-space-0.20.0.tgz#75e1fb86d1b052fc1cc3036ca2fa441fa92b85e4"

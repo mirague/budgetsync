@@ -1,10 +1,10 @@
-import {Command} from '@oclif/command'
+import { Command } from '@oclif/command'
 import * as Listr from 'listr'
 import Nordigen from 'nordigen-api'
-import {Transaction, TransactionData} from 'nordigen-api/build/main/lib/types'
-import {SaveTransaction} from 'ynab'
-import {daysSinceDate} from '../lib/date'
-import {ynabAPI} from '../lib/ynab'
+import { Transaction, TransactionData } from 'nordigen-api/build/main/lib/types'
+import { SaveTransaction } from 'ynab'
+import { daysSinceDate } from '../lib/date'
+import { ynabAPI } from '../lib/ynab'
 
 const {
   NORDIGEN_AUTH_TOKEN,
@@ -16,14 +16,17 @@ const {
 const nordigen = new Nordigen(NORDIGEN_AUTH_TOKEN!)
 
 type Context = {
-  transactions: TransactionData['transactions'];
+  transactions: TransactionData['transactions']
 }
 
 function txFilter(tx: Transaction): boolean {
   return daysSinceDate(new Date(tx.bookingDate)) <= 7
 }
 
-function toYNABTransaction(tx: Transaction, isPending = false): SaveTransaction {
+function toYNABTransaction(
+  tx: Transaction,
+  isPending = false,
+): SaveTransaction {
   return {
     import_id: isPending ? null : tx.transactionId,
     cleared: SaveTransaction.ClearedEnum.Cleared,
@@ -43,11 +46,17 @@ export default class Bank extends Command {
       {
         title: 'Load bank transactions from Nordigen',
         task: async (ctx: Context) => {
-          const requisitionInfo = await nordigen.getRequisitionInfo(NORDIGEN_REQUISITION_ID!)
-          const data = await nordigen.getAccountTransactions(requisitionInfo.accounts[0])
-          const {transactions} = data
+          const requisitionInfo = await nordigen.getRequisitionInfo(
+            NORDIGEN_REQUISITION_ID!,
+          )
+          const data = await nordigen.getAccountTransactions(
+            requisitionInfo.accounts[0],
+          )
+          const { transactions } = data
           if (!transactions) {
-            throw new Error('Could not load account transactions')
+            throw new Error(
+              `Could not load account transactions: ${(data as any)?.detail}`,
+            )
           }
           ctx.transactions = transactions
           return true
@@ -57,7 +66,9 @@ export default class Bank extends Command {
         title: 'Import transactions to YNAB',
         task: async (ctx: Context) => {
           const transactions = [
-            ...ctx.transactions.booked.filter(txFilter).map(tx => toYNABTransaction(tx)),
+            ...ctx.transactions.booked
+              .filter(txFilter)
+              .map((tx) => toYNABTransaction(tx)),
             // ...ctx.transactions.pending.filter(txFilter).map(tx => toYNABTransaction(tx, true)),
           ]
 
@@ -68,11 +79,11 @@ export default class Bank extends Command {
       },
     ])
 
-    tasks.run().catch(error => {
+    tasks.run().catch((error) => {
       if (error instanceof Error) {
         this.error(error)
       }
-      console.error('Error:', {...error}) // eslint-disable-line
+      console.error('Error:', { ...error }) // eslint-disable-line
     })
   }
 }
