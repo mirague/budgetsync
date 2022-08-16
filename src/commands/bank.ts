@@ -20,7 +20,7 @@ type Context = {
 }
 
 function txFilter(tx: Transaction): boolean {
-  return daysSinceDate(new Date(tx.bookingDate)) <= 7
+  return daysSinceDate(new Date(tx.bookingDate)) <= 14
 }
 
 function toYNABTransaction(
@@ -31,7 +31,7 @@ function toYNABTransaction(
     import_id: isPending ? null : tx.transactionId,
     cleared: SaveTransaction.ClearedEnum.Cleared,
     account_id: YNAB_CHECKING_ACCOUNT_ID!,
-    amount: parseInt(tx.transactionAmount.amount, 10) * 1000,
+    amount: Math.floor(parseFloat(tx.transactionAmount.amount) * 1000),
     date: tx.bookingDate,
     payee_name: tx.remittanceInformationUnstructured,
     memo: tx.remittanceInformationUnstructured,
@@ -71,7 +71,6 @@ export default class Bank extends Command {
               .map((tx) => toYNABTransaction(tx)),
             // ...ctx.transactions.pending.filter(txFilter).map(tx => toYNABTransaction(tx, true)),
           ]
-
           return ynabAPI.transactions.bulkCreateTransactions(YNAB_BUDGET_ID!, {
             transactions,
           })
