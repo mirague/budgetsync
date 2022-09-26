@@ -1,3 +1,12 @@
+#!/bin/bash
+
+# Define a timestamp function
+timestamp() {
+  date +"%F_%T"
+}
+
+TS=$(timestamp) 
+
 # 1. Get Auth Token
 NORDIGEN_TOKEN=$(
   curl -X POST "https://ob.nordigen.com/api/v2/token/new/" \
@@ -17,7 +26,7 @@ EUA_ID=$(
     -H  "Authorization: Bearer ${NORDIGEN_TOKEN}" \
     -d '{"institution_id": "NORDEA_NDEASESS",
         "max_historical_days": "180",
-        "access_valid_for_days": "30",
+        "access_valid_for_days": "90",
         "access_scope": ["balances", "details", "transactions"]
     }' | jq --raw-output ".id"
 )
@@ -30,11 +39,12 @@ URL=$(
     -H "Authorization: Bearer ${NORDIGEN_TOKEN}" \
     -d '{"redirect": "http://example.com",
         "institution_id": "NORDEA_NDEASESS",
-        "reference": "melvin-'"${$(date +"%Y-%m-%dT%H:%M:%S")}"'",
+        "reference": "melvin-'"${TS}"'",
         "agreement": "'"${EUA_ID}"'",
         "user_language":"EN" 
-    }' | jq --raw-output ".link"
+    }' | jq '.link'
 )
 
+echo $URL
 echo "Opening URL in browser..."
 open $URL
