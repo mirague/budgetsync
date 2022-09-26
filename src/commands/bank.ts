@@ -20,7 +20,7 @@ type Context = {
 }
 
 function txFilter(tx: Transaction): boolean {
-  return daysSinceDate(new Date(tx.bookingDate)) <= 14
+  return daysSinceDate(new Date(tx.bookingDate)) <= 40
 }
 
 function toYNABTransaction(
