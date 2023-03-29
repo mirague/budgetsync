@@ -161,9 +161,10 @@ export default class Bank extends Command {
             ...ctx.transactions.booked
               .filter(txFilter)
               .map((tx) => toYNABTransaction(tx)),
-            ...ctx.transactions.pending
-              .filter(txFilter)
-              .map((tx) => toYNABTransaction(tx, true)),
+            // Commented out: IDs don't match between pending + booked :(
+            // ...ctx.transactions.pending
+            //   .filter(txFilter)
+            //   .map((tx) => toYNABTransaction(tx, true)),
           ]
 
           return ynabAPI.transactions.bulkCreateTransactions(YNAB_BUDGET_ID!, {
